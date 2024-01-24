@@ -62,6 +62,49 @@ static int mjson_pass_string(const char *s, int len) {
   return MJSON_ERROR_INVALID_INPUT;
 }
 
+char *mjson_read_file(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("fopen");
+        return NULL;
+    }
+
+    char *str = NULL;
+    size_t str_size = 0;
+    size_t str_capacity = 0;
+    char buf[4096];
+    size_t n;
+
+    while ((n = fread(buf, 1, sizeof(buf), file)) > 0) {
+        if (str_size + n + 1 > str_capacity) {
+            str_capacity = (str_size + n) * 2;
+            char *new_str = realloc(str, str_capacity);
+            if (new_str == NULL) {
+                perror("realloc");
+                free(str);
+                fclose(file);
+                return NULL;
+            }
+            str = new_str;
+        }
+        for (size_t i = 0; i < n; ++i) {
+            str[str_size++] = buf[i];
+        }
+        str[str_size] = '\0';
+    }
+
+    if (ferror(file)) {
+        perror("fread");
+        free(str);
+        fclose(file);
+        return NULL;
+    }
+
+    fclose(file);
+    return str;
+}
+
 int mjson(const char *s, int len, mjson_cb_t cb, void *ud) {
   enum { S_VALUE, S_KEY, S_COLON, S_COMMA_OR_EOO } expecting = S_VALUE;
   unsigned char nesting[MJSON_MAX_DEPTH];
