@@ -86,6 +86,8 @@ typedef int (*mjson_cb_t)(int event, const char *buf, int offset, int len,
 #define MJSON_MAX_DEPTH 20
 #endif
 
+char *mjson_read_file(const char *filename);
+
 int mjson(const char *buf, int len, mjson_cb_t cb, void *ud);
 int mjson_find(const char *buf, int len, const char *jp, const char **tp,
                int *tl);
